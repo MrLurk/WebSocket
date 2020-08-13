@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket 测试</title>
+</head>
+
+<body>
+    <input type="button" id="button" onclick="webSocketTest()" value="测试" />
+</body>
+
+</html>
+
+<script type="text/javascript">
+    function webSocketTest() {
+        if ("WebSocket" in window) {
+            console.log("您的浏览器支持 WebSocket!");
+
+            // 打开一个 web socket
+            var ws = new WebSocket("ws://localhost:9998/echo");
+
+            ws.onopen = function () {
+                // Web Socket 已连接上，使用 send() 方法发送数据
+                ws.send("发送数据");
+                console.log("数据发送中...");
+            };
+
+            ws.onmessage = function (evt) {
+                var received_msg = evt.data;
+                console.log("数据已接收...");
+            };
+
+            ws.onclose = function () {
+                // 关闭 websocket
+                console.log("连接已关闭...");
+            };
+        } else {
+            alert("浏览器不支持 WebSocket!");
+        }
+    }
+</script>
