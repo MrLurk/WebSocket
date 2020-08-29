@@ -4,40 +4,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.js"
+        integrity="sha512-WNLxfP/8cVYL9sj8Jnp6et0BkubLP31jhTG9vhL/F5uEZmg5wEzKoXp1kJslzPQWwPT1eyMiSxlKCgzHLOTOTQ=="
+        crossorigin="anonymous"></script>
     <title>WebSocket 测试</title>
 </head>
 
 <body>
-    <input type="button" id="button" onclick="webSocketTest()" value="测试" />
+    <div style="margin-bottom:5px;">
+        房间号: <input type="text" id="txtRoomNo" value="8888" /> <button id="btnJoin">加入房间</button> <button
+            id="btnLeave">退出房间</button>
+    </div>
+    <div style="margin-bottom:5px;">
+        昵称: <input type="text" id="txtNickName" value="" placeholder="请输入昵称" />
+    </div>
+    <div style="height:300px;width:600px">
+        <textarea style="height:100%;width:100%" id="msgList"></textarea>
+        <div style="text-align: right">
+            <input type="text" id="txtMsg" value="" /> <button id="btnSend">发送消息</button>
+        </div>
+    </div>
 </body>
 
 </html>
 
 <script type="text/javascript">
-    function webSocketTest() {
-        if ("WebSocket" in window) {
-            console.log("您的浏览器支持 WebSocket!");
+    // var server = 'ws://localhost:5018'; //如果开启了https则这里是wss
+    var server = 'ws://111.230.171.152:4002';
 
-            // 打开一个 web socket
-            var ws = new WebSocket("ws://localhost:9998/echo");
+    var WEB_SOCKET = new WebSocket(server + '/ws');
 
-            ws.onopen = function () {
-                // Web Socket 已连接上，使用 send() 方法发送数据
-                ws.send("发送数据");
-                console.log("数据发送中...");
-            };
+    WEB_SOCKET.onopen = function (evt) {
+        console.log('Connection open ...');
+        $('#msgList').val('网络连接已打开 .');
+    };
 
-            ws.onmessage = function (evt) {
-                var received_msg = evt.data;
-                console.log("数据已接收...");
-            };
+    WEB_SOCKET.onmessage = function (evt) {
+        console.log('收到消息: ' + evt.data);
+        if (evt.data) {
+            var content = $('#msgList').val();
+            content = content + '\r\n' + evt.data;
 
-            ws.onclose = function () {
-                // 关闭 websocket
-                console.log("连接已关闭...");
-            };
-        } else {
-            alert("浏览器不支持 WebSocket!");
+            $('#msgList').val(content);
         }
-    }
+    };
+
+    WEB_SOCKET.onclose = function (evt) {
+        console.log('连接已关闭.');
+    };
+
+    $('#btnJoin').on('click', function () {
+        var roomNo = $('#txtRoomNo').val();
+        var nick = $('#txtNickName').val();
+        if (!nick || !roomNo) {
+            alert("请填写完整昵称和房间号!");
+            return;
+        }
+        if (roomNo) {
+            var msg = {
+                action: 'join',
+                msg: roomNo,
+                nick: nick
+            };
+            WEB_SOCKET.send(JSON.stringify(msg));
+        }
+    });
+
+    $('#btnSend').on('click', function () {
+        var message = $('#txtMsg').val();
+        var roomNo = $('#txtRoomNo').val();
+        var nick = $('#txtNickName').val();
+        if (!nick || !roomNo) {
+            alert("请填写完整昵称和房间号!");
+            return;
+        }
+        if (message) {
+            WEB_SOCKET.send(JSON.stringify({
+                action: 'send_to_room',
+                msg: message,
+                nick: nick
+            }));
+        }
+    });
+
+    $('#btnLeave').on('click', function () {
+        var nick = $('#txtNickName').val();
+        var msg = {
+            action: 'leave',
+            msg: '',
+            nick: nick
+        };
+        WEB_SOCKET.send(JSON.stringify(msg));
+    });
 </script>

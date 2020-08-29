@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Api.Middleware;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -35,6 +36,14 @@ namespace Api
             {
                 app.UseDeveloperExceptionPage();
             }
+            
+            // 启用中间件
+            app.UseWebSockets(new WebSocketOptions {
+                KeepAliveInterval = TimeSpan.FromSeconds(60),
+                ReceiveBufferSize = 1 * 1024
+            });
+            app.UseMiddleware<WebsocketHandlerMiddleware>();
+
 
             app.UseHttpsRedirection();
 
